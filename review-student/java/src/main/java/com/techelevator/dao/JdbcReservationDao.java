@@ -6,6 +6,8 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JdbcReservationDao implements ReservationDao {
 
@@ -15,8 +17,27 @@ public class JdbcReservationDao implements ReservationDao {
         jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
+    //        List<Campground> campgrounds = new ArrayList<>();
+    //        String sql = "SELECT campground_id, name, open_from_mm, open_to_mm, daily_fee FROM campground WHERE park_id = ?;";
+    //        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, parkId);
+    //
+    //        while (result.next()) {
+    //            Campground campground = mapRowToCampground(result);
+    //            campgrounds.add(campground);
+    //        }
+    //        return campgrounds;
+
+    //A reservation requires a site ID, name to reserve under, a start date, and an end date.
+    //
+    //The user receives a confirmation ID (which is the new reservation_id from the database) once they submit their reservation.
+
     @Override
     public int createReservation(int siteId, String name, LocalDate fromDate, LocalDate toDate) {
+        List<Reservation> reservations = new ArrayList<>();
+        String sql = "SELECT reservation_id FROM reservation ORDER BY reservation_id DESC LIMIT 1;";
+        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, siteId, name, fromDate, toDate);
+        //int reservationNumber = (int) result.getObject(reservations);
+
         return -1;
     }
 
@@ -30,6 +51,8 @@ public class JdbcReservationDao implements ReservationDao {
         r.setCreateDate(results.getDate("create_date").toLocalDate());
         return r;
     }
+
+
 
 
 }
