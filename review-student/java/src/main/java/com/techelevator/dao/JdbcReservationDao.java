@@ -22,26 +22,6 @@ public class JdbcReservationDao implements ReservationDao {
         jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    //        List<Campground> campgrounds = new ArrayList<>();
-    //        String sql = "SELECT campground_id, name, open_from_mm, open_to_mm, daily_fee FROM campground WHERE park_id = ?;";
-    //        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, parkId);
-    //
-    //        while (result.next()) {
-    //            Campground campground = mapRowToCampground(result);
-    //            campgrounds.add(campground);
-    //        }
-    //        return campgrounds;
-
-    //        List<Reservation> reservations = new ArrayList<>();
-    //        String sql = "SELECT reservation_id FROM reservation ORDER BY reservation_id DESC LIMIT 1;";
-    //        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, siteId, name, fromDate, toDate);
-    //        ResultSet re =
-    //        //int reservationNumber = (int) result.getObject(reservations);
-
-    //A reservation requires a site ID, name to reserve under, a start date, and an end date.
-    //
-    //The user receives a confirmation ID (which is the new reservation_id from the database) once they submit their reservation.
-
     @Override
     public int createReservation(int siteId, String name, LocalDate fromDate, LocalDate toDate) {
         Reservation reservation = new Reservation();
@@ -53,6 +33,22 @@ public class JdbcReservationDao implements ReservationDao {
         String sql = "INSERT INTO reservation(site_id,name,from_date,to_date,create_date) "+
                 " VALUES(?,?,?,?,NOW()) RETURNING reservation_id;";
         return jdbcTemplate.queryForObject(sql, Integer.class, reservation.getSiteId(),reservation.getName(),reservation.getFromDate(),reservation.getToDate());
+    }
+
+    public List<Reservation> upcomingReservations(int parkId){
+        List<Reservation> reservations = new ArrayList<>();
+        String sql = "SELECT *\n" +
+                "FROM reservation\n" +
+                "INNER JOIN site ON reservation.site_id = site.site_id\n" +
+                "INNER JOIN campground ON campground.campground_id = site.campground_id\n" +
+                "INNER JOIN park ON park.park_id = campground.park_id\n" +
+                "WHERE (reservation.from_date BETWEEN CURRENT_DATE AND CURRENT_DATE+30) AND park.park_id = ?;";
+        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, parkId);
+        while (result.next()){
+            reservations.add(mapRowToReservation(result));
+        }
+
+        return reservations;
     }
 
     private Reservation mapRowToReservation(SqlRowSet results) {
