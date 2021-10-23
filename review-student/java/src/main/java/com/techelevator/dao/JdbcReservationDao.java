@@ -2,9 +2,12 @@ package com.techelevator.dao;
 
 import com.techelevator.model.Reservation;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,18 +30,22 @@ public class JdbcReservationDao implements ReservationDao {
     //        }
     //        return campgrounds;
 
+    //        List<Reservation> reservations = new ArrayList<>();
+    //        String sql = "SELECT reservation_id FROM reservation ORDER BY reservation_id DESC LIMIT 1;";
+    //        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, siteId, name, fromDate, toDate);
+    //        ResultSet re =
+    //        //int reservationNumber = (int) result.getObject(reservations);
+
     //A reservation requires a site ID, name to reserve under, a start date, and an end date.
     //
     //The user receives a confirmation ID (which is the new reservation_id from the database) once they submit their reservation.
 
     @Override
     public int createReservation(int siteId, String name, LocalDate fromDate, LocalDate toDate) {
-        List<Reservation> reservations = new ArrayList<>();
-        String sql = "SELECT reservation_id FROM reservation ORDER BY reservation_id DESC LIMIT 1;";
-        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, siteId, name, fromDate, toDate);
-        //int reservationNumber = (int) result.getObject(reservations);
-
-        return -1;
+        String sql = "INSERT INTO reservation (site_id, name, from_date, to_date) " +
+                "VALUES(?,?,?,?);";
+        jdbcTemplate.update(sql,siteId,name,fromDate,toDate);
+        return Integer.parseInt("SELECT DISTINCT lastval() FROM reservation;");
     }
 
     private Reservation mapRowToReservation(SqlRowSet results) {
