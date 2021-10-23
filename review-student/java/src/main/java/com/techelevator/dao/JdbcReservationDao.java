@@ -8,6 +8,8 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLOutput;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,10 +44,15 @@ public class JdbcReservationDao implements ReservationDao {
 
     @Override
     public int createReservation(int siteId, String name, LocalDate fromDate, LocalDate toDate) {
-        String sql = "INSERT INTO reservation (site_id, name, from_date, to_date) " +
-                "VALUES(?,?,?,?);";
-        jdbcTemplate.update(sql,siteId,name,fromDate,toDate);
-        return Integer.parseInt("SELECT DISTINCT lastval() FROM reservation;");
+        Reservation reservation = new Reservation();
+        reservation.setSiteId(siteId);
+        reservation.setName(name);
+        reservation.setFromDate(fromDate);
+        reservation.setToDate(toDate);
+
+        String sql = "INSERT INTO reservation(site_id,name,from_date,to_date,create_date) "+
+                " VALUES(?,?,?,?,NOW()) RETURNING reservation_id;";
+        return jdbcTemplate.queryForObject(sql, Integer.class, reservation.getSiteId(),reservation.getName(),reservation.getFromDate(),reservation.getToDate());
     }
 
     private Reservation mapRowToReservation(SqlRowSet results) {
